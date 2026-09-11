@@ -1,3 +1,5 @@
+
+       
 from flask import Flask, redirect, render_template_string, request, session, url_for
 import requests
 
@@ -47,16 +49,11 @@ TEMPLATE = """
                 <p class="{{ 'msg' if 'Success' in message or 'ID' in message else 'error' }}">{{ message }}</p>
             {% endif %}
             <form method="POST" action="/order">
-                <label>Select Category / Service:</label>
+                <label>Select Service:</label>
                 <select name="service" required>
                     <option value="" disabled selected>Service Chuniye</option>
                     <option value="4681">Instagram Followers (Refill)</option>
-                    <option value="COM_SERVICE_ID">Instagram Likes</option>
-                    <option value="COM_SERVICE_ID">Instagram Views</option>
                 </select>
-                
-                <label>Service ID (Custom ya Upar Wali):</label>
-                <input type="text" name="service_id_manual" placeholder="Jaise: 4681 (agar upar se na chunein)" required>
                 
                 <label>Instagram Link:</label>
                 <input type="text" name="link" placeholder="Profile ya Post ka Link" required>
@@ -99,10 +96,7 @@ def order():
   if not session.get("logged_in"):
     return redirect(url_for("home"))
 
-  # Agar dropdown se select kiya ya manual dala, dono handle karega
-  service_id = request.form.get("service_id_manual") or request.form.get(
-      "service"
-  )
+  service_id = request.form.get("service")
   target_link = request.form.get("link")
   quantity = request.form.get("quantity")
 
