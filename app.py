@@ -1,5 +1,4 @@
 
-       
 from flask import Flask, redirect, render_template_string, request, session, url_for
 import requests
 
@@ -53,6 +52,8 @@ TEMPLATE = """
                 <select name="service" required>
                     <option value="" disabled selected>Service Chuniye</option>
                     <option value="4681">Instagram Followers (Refill)</option>
+                    <option value="LIKE_SERVICE_ID">Instagram Likes</option>
+                    <option value="VIEW_SERVICE_ID">Instagram Views</option>
                 </select>
                 
                 <label>Instagram Link:</label>
