@@ -1,3 +1,4 @@
+
 from flask import Flask, redirect, render_template_string, request, session, url_for
 import requests
 
@@ -79,7 +80,7 @@ TEMPLATE = """
         
         .alert { padding: 12px; border-radius: 8px; font-size: 13px; margin-bottom: 20px; text-align: center; font-weight: 500; }
         .alert-success { background: rgba(6, 78, 59, 0.4); color: #34d399; border: 1px solid #059669; }
-        .alert-error { background: rgba(127, 29, 29, 0.4); color: fca5a5; border: 1px solid #dc2626; }
+        .alert-error { background: rgba(127, 29, 29, 0.4); color: #fca5a5; border: 1px solid #dc2626; }
     </style>
     <script>
         function calculatePrice() {
@@ -129,11 +130,14 @@ TEMPLATE = """
                         {% endfor %}
                     </select>
                     
-                    <label>Target URL / Link</label>
-                    <input type="text" name="link" placeholder="https://instagram.com/..." required>
+                    <label>Target URL / Link or Username</label>
+                    <input type="text" name="link" placeholder="Link ya Username daalein" required>
                     
                     <label>Quantity</label>
                     <input type="number" name="quantity" id="qtyInput" oninput="calculatePrice()" placeholder="Enter quantity" required>
+                    
+                    <label>Username (Agar service maange)</label>
+                    <input type="text" name="username" placeholder="Optional / Username agar zaroori ho">
                     
                     <div class="price-card">
                         <span>Estimated Total</span>
@@ -182,6 +186,7 @@ def order():
   service_id = request.form.get("service")
   target_link = request.form.get("link")
   quantity = request.form.get("quantity")
+  username = request.form.get("username")
 
   payload = {
       "key": API_KEY,
@@ -190,6 +195,9 @@ def order():
       "link": target_link,
       "quantity": quantity,
   }
+
+  if username:
+    payload["username"] = username
 
   try:
     response = requests.post(API_URL, data=payload)
