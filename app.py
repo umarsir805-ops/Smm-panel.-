@@ -1,4 +1,3 @@
-
 from flask import Flask, redirect, render_template_string, request, session, url_for
 import requests
 
@@ -6,22 +5,45 @@ app = Flask(__name__)
 app.secret_key = "umar_secret_key_123"
 
 API_URL = "https://cheapestsmmpanels.com/api/v2"
-API_KEY = "a80914253900dbf6ff33b16a59fb9ecb"
+API_KEY = "7f10f519fa301e5ac7ef9109abe3487e"
 PANEL_PASSWORD = "UMAR ALI 007"
+
+
+def fetch_services():
+  try:
+    response = requests.post(API_URL, data={"key": API_KEY, "action": "services"})
+    data = response.json()
+    if isinstance(data, list):
+      ig_services = [
+          s
+          for s in data
+          if "instagram" in s.get("name", "").lower()
+          and any(k in s.get("name", "").lower() for k in ["follower", "like", "view"])
+      ]
+      return ig_services[:30] if ig_services else data[:20]
+  except Exception:
+    pass
+  return [
+      {"service": "4681", "name": "Instagram Followers (Refill)", "rate": "35.00"},
+      {"service": "6243", "name": "Instagram Auto Likes", "rate": "5.00"},
+      {"service": "1348", "name": "Instagram Views (Cheapest)", "rate": "0.15"},
+  ]
+
 
 TEMPLATE = """
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Private SMM Panel</title>
+    <title>Professional SMM Panel</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
         body { font-family: Arial, sans-serif; background: #000000; color: #ffffff; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
-        .card { background: #121212; border: 1px solid #27272a; padding: 25px; border-radius: 12px; width: 340px; box-shadow: 0 8px 24px rgba(0,0,0,0.8); box-sizing: border-box; }
+        .card { background: #121212; border: 1px solid #27272a; padding: 25px; border-radius: 12px; width: 360px; box-shadow: 0 8px 24px rgba(0,0,0,0.8); box-sizing: border-box; }
         h2 { text-align: center; margin-bottom: 20px; font-size: 22px; color: #f43f5e; }
         label { font-size: 13px; color: #a1a1aa; display: block; margin-top: 10px; }
         input, select { width: 100%; padding: 12px; margin-top: 5px; background: #18181b; border: 1px solid #3f3f46; color: white; border-radius: 6px; box-sizing: border-box; font-size: 14px; }
         input:focus, select:focus { border-color: #f43f5e; outline: none; }
+        .price-box { background: #1e1e24; border: 1px dashed #f43f5e; padding: 10px; border-radius: 6px; margin-top: 12px; text-align: center; font-size: 14px; color: #34d399; font-weight: bold; }
         button { width: 100%; padding: 12px; background: #f43f5e; border: none; color: white; font-weight: bold; border-radius: 6px; cursor: pointer; margin-top: 18px; font-size: 15px; transition: background 0.2s; }
         button:hover { background: #e11d48; }
         .logout { background: #27272a; color: #f43f5e; margin-top: 12px; }
@@ -29,6 +51,20 @@ TEMPLATE = """
         .msg { background: #064e3b; color: #34d399; padding: 10px; border-radius: 6px; text-align: center; font-size: 13px; margin-bottom: 15px; border: 1px solid #059669; }
         .error { background: #7f1d1d; color: #fca5a5; padding: 10px; border-radius: 6px; text-align: center; font-size: 13px; margin-bottom: 15px; border: 1px solid #dc2626; }
     </style>
+    <script>
+        function calculatePrice() {
+            const select = document.getElementById('serviceSelect');
+            const qtyInput = document.getElementById('qtyInput');
+            const priceDisplay = document.getElementById('priceDisplay');
+            
+            const selectedOption = select.options[select.selectedIndex];
+            const ratePer1000 = parseFloat(selectedOption.getAttribute('data-rate')) || 0;
+            const quantity = parseInt(qtyInput.value) || 0;
+            
+            const totalPrice = (quantity / 1000) * ratePer1000;
+            priceDisplay.innerText = "Total Price: ₹ " + totalPrice.toFixed(2);
+        }
+    </script>
 </head>
 <body>
     <div class="card">
@@ -43,24 +79,26 @@ TEMPLATE = """
                 <button type="submit">Login</button>
             </form>
         {% else %}
-            <h2>⚡ SMM Order Panel</h2>
+            <h2>⚡ Pro SMM Panel</h2>
             {% if message %}
                 <p class="{{ 'msg' if 'Success' in message or 'ID' in message else 'error' }}">{{ message }}</p>
             {% endif %}
             <form method="POST" action="/order">
                 <label>Select Service:</label>
-                <select name="service" required>
+                <select name="service" id="serviceSelect" onchange="calculatePrice()" required>
                     <option value="" disabled selected>Service Chuniye</option>
-                    <option value="4681">Instagram Followers (Refill)</option>
-                    <option value="LIKE_SERVICE_ID">Instagram Likes</option>
-                    <option value="VIEW_SERVICE_ID">Instagram Views</option>
+                    {% for s in services %}
+                        <option value="{{ s.service }}" data-rate="{{ s.rate }}">{{ s.name }} (₹{{ s.rate }}/1k)</option>
+                    {% endfor %}
                 </select>
                 
                 <label>Instagram Link:</label>
                 <input type="text" name="link" placeholder="Profile ya Post ka Link" required>
                 
                 <label>Quantity:</label>
-                <input type="number" name="quantity" placeholder="Quantity daalein" required>
+                <input type="number" name="quantity" id="qtyInput" oninput="calculatePrice()" placeholder="Quantity daalein" required>
+                
+                <div class="price-box" id="priceDisplay">Total Price: ₹ 0.00</div>
                 
                 <button type="submit">Place Order</button>
             </form>
@@ -77,7 +115,10 @@ TEMPLATE = """
 @app.route("/")
 def home():
   logged_in = session.get("logged_in", False)
-  return render_template_string(TEMPLATE, logged_in=logged_in)
+  services = fetch_services() if logged_in else []
+  return render_template_string(
+      TEMPLATE, logged_in=logged_in, services=services
+  )
 
 
 @app.route("/login", methods=["POST"])
@@ -119,8 +160,9 @@ def order():
   except Exception as e:
     message = f"Connection Error: {e}"
 
+  services = fetch_services()
   return render_template_string(
-      TEMPLATE, logged_in=True, message=message
+      TEMPLATE, logged_in=True, services=services, message=message
   )
 
 
