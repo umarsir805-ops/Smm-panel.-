@@ -1,4 +1,5 @@
 
+        
 from flask import Flask, redirect, render_template_string, request, session, url_for
 import requests
 
@@ -15,34 +16,24 @@ def fetch_services():
     response = requests.post(API_URL, data={"key": API_KEY, "action": "services"})
     data = response.json()
     if isinstance(data, list):
-      followers = [
-          s
-          for s in data
-          if "instagram" in s.get("name", "").lower()
-          and "follower" in s.get("name", "").lower()
-      ][:12]
-      likes = [
-          s
-          for s in data
-          if "instagram" in s.get("name", "").lower()
-          and "like" in s.get("name", "").lower()
-      ][:12]
-      views = [
-          s
-          for s in data
-          if "instagram" in s.get("name", "").lower()
-          and ("view" in s.get("name", "").lower() or "reel" in s.get("name", "").lower())
-      ][:12]
-
-      combined = followers + likes + views
-      if combined:
-        return combined
+      return data
   except Exception:
     pass
   return [
-      {"service": "4681", "name": "Instagram Followers (Refill)", "rate": "35.00"},
-      {"service": "6243", "name": "Instagram Auto Likes", "rate": "5.00"},
-      {"service": "1348", "name": "Instagram Views (Cheapest)", "rate": "0.15"},
+      {
+          "service": "4681",
+          "category": "Instagram Followers",
+          "name": "Instagram Followers (Refill)",
+          "rate": "35.00",
+          "description": "Start: Instant\nSpeed: Fast\nRefill: 30 Days",
+      },
+      {
+          "service": "6243",
+          "category": "Instagram Likes",
+          "name": "Instagram Auto Likes",
+          "rate": "5.00",
+          "description": "Start: Instant\nQuality: High",
+      },
   ]
 
 
@@ -50,101 +41,150 @@ TEMPLATE = """
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Umar Panel | Pro Dashboard</title>
+    <title>Sparkyinfluence | Panel</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         * { box-sizing: border-box; font-family: 'Inter', sans-serif; }
-        body { background: #09090b; color: #f4f4f5; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
-        .dashboard { width: 100%; max-width: 420px; padding: 20px; }
-        .card { background: #121215; border: 1px solid #27272a; padding: 30px; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.6); }
-        .brand { text-align: center; margin-bottom: 25px; }
-        .brand h2 { margin: 0; font-size: 24px; font-weight: 700; color: #ffffff; letter-spacing: -0.5px; }
-        .brand span { color: #f43f5e; }
-        .brand p { margin: 5px 0 0; font-size: 13px; color: #a1a1aa; }
+        body { background: #f8fafc; color: #1e293b; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
+        .dashboard { width: 100%; max-width: 440px; padding: 15px; }
+        .card { background: #ffffff; border: 1px solid #e2e8f0; padding: 24px; border-radius: 14px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); }
+        .brand { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid #f1f5f9; padding-bottom: 12px; }
+        .brand h2 { margin: 0; font-size: 20px; font-weight: 700; color: #0f172a; }
+        .menu-icon { font-size: 20px; cursor: pointer; color: #64748b; }
         
-        label { font-size: 12px; font-weight: 600; color: #a1a1aa; display: block; margin-top: 16px; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px; }
-        input, select { width: 100%; padding: 14px; background: #18181b; border: 1px solid #27272a; color: white; border-radius: 8px; font-size: 14px; transition: all 0.2s ease; }
-        input:focus, select:focus { border-color: #f43f5e; outline: none; background: #202025; box-shadow: 0 0 0 3px rgba(244, 63, 94, 0.15); }
+        label { font-size: 13px; font-weight: 600; color: #16a34a; display: block; margin-top: 14px; margin-bottom: 6px; }
+        input, select { width: 100%; padding: 12px; background: #f8fafc; border: 1px solid #cbd5e1; color: #0f172a; border-radius: 8px; font-size: 14px; transition: all 0.2s ease; }
+        input:focus, select:focus { border-color: #16a34a; outline: none; background: #fff; box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.1); }
         
-        .price-card { background: #18181b; border: 1px solid #27272a; padding: 14px; border-radius: 8px; margin-top: 20px; display: flex; justify-content: space-between; align-items: center; }
-        .price-card span { font-size: 13px; color: #a1a1aa; }
-        .price-card h3 { margin: 0; font-size: 18px; color: #34d399; font-weight: 700; }
+        .desc-box { background: #f1f5f9; border: 1px solid #e2e8f0; padding: 12px; border-radius: 8px; margin-top: 12px; font-size: 12px; color: #334155; white-space: pre-line; display: none; line-height: 1.5; }
         
-        button { width: 100%; padding: 14px; background: #f43f5e; border: none; color: white; font-weight: 600; border-radius: 8px; cursor: pointer; margin-top: 22px; font-size: 15px; transition: background 0.2s, transform 0.1s; }
-        button:hover { background: #e11d48; }
-        button:active { transform: scale(0.98); }
+        .helper-text { font-size: 11px; color: #64748b; margin-top: 4px; }
         
-        .logout-btn { background: transparent; border: 1px solid #27272a; color: #a1a1aa; margin-top: 10px; }
-        .logout-btn:hover { background: #18181b; color: #ffffff; border-color: #3f3f46; }
+        button { width: 100%; padding: 14px; background: #16a34a; border: none; color: white; font-weight: 600; border-radius: 8px; cursor: pointer; margin-top: 20px; font-size: 15px; transition: background 0.2s; }
+        button:hover { background: #15803d; }
         
-        .alert { padding: 12px; border-radius: 8px; font-size: 13px; margin-bottom: 20px; text-align: center; font-weight: 500; }
-        .alert-success { background: rgba(6, 78, 59, 0.4); color: #34d399; border: 1px solid #059669; }
-        .alert-error { background: rgba(127, 29, 29, 0.4); color: #fca5a5; border: 1px solid #dc2626; }
+        .logout-btn { background: transparent; border: 1px solid #cbd5e1; color: #64748b; margin-top: 10px; }
+        .logout-btn:hover { background: #f1f5f9; color: #0f172a; }
+        
+        .alert { padding: 10px; border-radius: 8px; font-size: 13px; margin-bottom: 15px; text-align: center; font-weight: 500; }
+        .alert-success { background: #dcfce7; color: #166534; border: 1px solid #bbf7d0; }
+        .alert-error { background: #fee2e2; color: #991b1b; border: 1px solid #fecaca; }
     </style>
     <script>
-        function calculatePrice() {
+        let allServices = [];
+
+        function initServices(servicesData) {
+            allServices = servicesData;
+            const categorySet = [...new Set(allServices.map(s => s.category))];
+            const catSelect = document.getElementById('categorySelect');
+            
+            catSelect.innerHTML = '<option value="" disabled selected>Choose category...</option>';
+            categorySet.forEach(cat => {
+                let opt = document.createElement('option');
+                opt.value = cat;
+                opt.textContent = cat;
+                catSelect.appendChild(opt);
+            });
+        }
+
+        function updateServicesByCategory() {
+            const selectedCat = document.getElementById('categorySelect').value;
+            const serviceSelect = document.getElementById('serviceSelect');
+            
+            serviceSelect.innerHTML = '<option value="" disabled selected>Choose a service...</option>';
+            
+            const filtered = allServices.filter(s => s.category === selectedCat);
+            filtered.forEach(s => {
+                let opt = document.createElement('option');
+                opt.value = s.service;
+                opt.setAttribute('data-rate', s.rate);
+                opt.setAttribute('data-desc', s.description || "No description available.");
+                opt.textContent = s.name + " (₹" + s.rate + "/1k)";
+                serviceSelect.appendChild(opt);
+            });
+            clearDetails();
+        }
+
+        function updateServiceDetails() {
             const select = document.getElementById('serviceSelect');
             const qtyInput = document.getElementById('qtyInput');
-            const priceDisplay = document.getElementById('priceDisplay');
+            const chargeInput = document.getElementById('chargeInput');
+            const descBox = document.getElementById('descBox');
             
             const selectedOption = select.options[select.selectedIndex];
             const ratePer1000 = parseFloat(selectedOption.getAttribute('data-rate')) || 0;
+            const description = selectedOption.getAttribute('data-desc') || "";
             const quantity = parseInt(qtyInput.value) || 0;
             
-            const totalPrice = (quantity / 1000) * ratePer1000;
-            priceDisplay.innerText = "₹ " + totalPrice.toFixed(2);
+            // Calculate Total Charge
+            const totalCharge = (quantity / 1000) * ratePer1000;
+            chargeInput.value = "₹ " + totalCharge.toFixed(2);
+            
+            // Show Description Box
+            if (description.trim() !== "") {
+                descBox.style.display = "block";
+                descBox.innerText = description;
+            } else {
+                descBox.style.display = "none";
+            }
+        }
+
+        function clearDetails() {
+            document.getElementById('descBox').style.display = "none";
+            document.getElementById('qtyInput').value = "";
+            document.getElementById('chargeInput').value = "₹ 0.00";
         }
     </script>
 </head>
-<body>
+<body onload='initServices({{ services_json | safe }})'>
     <div class="dashboard">
         <div class="card">
             {% if not logged_in %}
                 <div class="brand">
-                    <h2>Umar<span>Panel</span></h2>
-                    <p>Secure Admin Access</p>
+                    <h2>Sparkyinfluence</h2>
                 </div>
                 {% if error %}
                     <div class="alert alert-error">{{ error }}</div>
                 {% endif %}
                 <form method="POST" action="/login">
                     <label>Admin Password</label>
-                    <input type="password" name="password" placeholder="Enter secure password" required>
-                    <button type="submit">Authenticate</button>
+                    <input type="password" name="password" placeholder="Enter password" required>
+                    <button type="submit">Login</button>
                 </form>
             {% else %}
                 <div class="brand">
-                    <h2>Umar<span>Panel</span></h2>
-                    <p>Managed by Umar Ali</p>
+                    <h2>Sparkyinfluence</h2>
+                    <span class="menu-icon">☰</span>
                 </div>
                 {% if message %}
                     <div class="alert {{ 'alert-success' if 'Success' in message or 'ID' in message else 'alert-error' }}">{{ message }}</div>
                 {% endif %}
                 <form method="POST" action="/order">
-                    <label>Select Service</label>
-                    <select name="service" id="serviceSelect" onchange="calculatePrice()" required>
-                        <option value="" disabled selected>Choose a service...</option>
-                        {% for s in services %}
-                            <option value="{{ s.service }}" data-rate="{{ s.rate }}">{{ s.name }} (₹{{ s.rate }}/1k)</option>
-                        {% endfor %}
+                    <label>Category</label>
+                    <select id="categorySelect" onchange="updateServicesByCategory()" required>
+                        <option value="" disabled selected>Loading categories...</option>
                     </select>
                     
-                    <label>Target URL / Link or Username</label>
-                    <input type="text" name="link" placeholder="Link ya Username daalein" required>
+                    <label>Service</label>
+                    <select name="service" id="serviceSelect" onchange="updateServiceDetails()" required>
+                        <option value="" disabled selected>Select category first...</option>
+                    </select>
+                    
+                    <label>Description</label>
+                    <div class="desc-box" id="descBox"></div>
+                    
+                    <label>Link</label>
+                    <input type="text" name="link" placeholder="https://instagram.com/..." required>
                     
                     <label>Quantity</label>
-                    <input type="number" name="quantity" id="qtyInput" oninput="calculatePrice()" placeholder="Enter quantity" required>
+                    <input type="number" name="quantity" id="qtyInput" oninput="updateServiceDetails()" placeholder="Quantity" required>
+                    <div class="helper-text">Min: 10 - Max: 100000</div>
                     
-                    <label>Username (Agar service maange)</label>
-                    <input type="text" name="username" placeholder="Optional / Username agar zaroori ho">
+                    <label>Charge</label>
+                    <input type="text" id="chargeInput" value="₹ 0.00" disabled style="background: #e2e8f0; font-weight: bold; color: #16a34a;">
                     
-                    <div class="price-card">
-                        <span>Estimated Total</span>
-                        <h3 id="priceDisplay">₹ 0.00</h3>
-                    </div>
-                    
-                    <button type="submit">Place Order</button>
+                    <button type="submit">Submit Order</button>
                 </form>
                 <form method="POST" action="/logout">
                     <button type="submit" class="logout-btn">Sign Out</button>
@@ -161,8 +201,11 @@ TEMPLATE = """
 def home():
   logged_in = session.get("logged_in", False)
   services = fetch_services() if logged_in else []
+  import json
+
+  services_json = json.dumps(services)
   return render_template_string(
-      TEMPLATE, logged_in=logged_in, services=services
+      TEMPLATE, logged_in=logged_in, services_json=services_json
   )
 
 
@@ -186,7 +229,6 @@ def order():
   service_id = request.form.get("service")
   target_link = request.form.get("link")
   quantity = request.form.get("quantity")
-  username = request.form.get("username")
 
   payload = {
       "key": API_KEY,
@@ -195,9 +237,6 @@ def order():
       "link": target_link,
       "quantity": quantity,
   }
-
-  if username:
-    payload["username"] = username
 
   try:
     response = requests.post(API_URL, data=payload)
@@ -210,8 +249,14 @@ def order():
     message = f"Connection Error: {e}"
 
   services = fetch_services()
+  import json
+
+  services_json = json.dumps(services)
   return render_template_string(
-      TEMPLATE, logged_in=True, services=services, message=message
+      TEMPLATE,
+      logged_in=True,
+      services_json=services_json,
+      message=message,
   )
 
 
