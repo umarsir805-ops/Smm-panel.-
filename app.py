@@ -1,3 +1,4 @@
+
 from flask import Flask, redirect, render_template_string, request, session, url_for
 import requests
 
@@ -13,7 +14,14 @@ def fetch_services():
         response = requests.post(API_URL, data={"key": API_KEY, "action": "services"})
         data = response.json()
         if isinstance(data, list):
-            return data
+            filtered = []
+            for s in data:
+                name_lower = s.get('name', '').lower()
+                cat_lower = s.get('category', '').lower()
+                if 'instagram' in name_lower or 'instagram' in cat_lower:
+                    if any(keyword in name_lower for keyword in ['follower', 'like', 'view', 'reel', 'post']):
+                        filtered.append(s)
+            return filtered if filtered else data[:20]
     except Exception:
         pass
     return []
@@ -22,24 +30,26 @@ TEMPLATE = """
 <!DOCTYPE html>
 <html>
 <head>
-    <title>AS ELUTION</title>
+    <title>AS illusion</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        * { box-sizing: border-box; font-family: 'Inter', sans-serif; }
+        * { box-sizing: border-box; font-family: 'Poppins', sans-serif; }
         body { background: #f8fafc; color: #1e293b; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
         .dashboard { width: 100%; max-width: 440px; padding: 15px; }
-        .card { background: #ffffff; border: 1px solid #e2e8f0; padding: 24px; border-radius: 14px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); }
-        .brand { text-align: center; margin-bottom: 20px; border-bottom: 1px solid #f1f5f9; padding-bottom: 12px; }
+        .card { background: #ffffff; border: 1px solid #e2e8f0; border-left: 5px solid #dc2626; padding: 24px; border-radius: 14px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); }
+        .brand { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid #f1f5f9; padding-bottom: 12px; }
         .brand h2 { margin: 0; font-size: 22px; font-weight: 700; letter-spacing: 0.5px; }
         .brand .red-text { color: #dc2626; }
         .brand .green-text { color: #16a34a; }
+        .menu-icon { font-size: 20px; cursor: pointer; color: #64748b; }
         
         label { font-size: 13px; font-weight: 600; color: #16a34a; display: block; margin-top: 14px; margin-bottom: 6px; }
         input, select { width: 100%; padding: 12px; background: #f8fafc; border: 1px solid #cbd5e1; color: #0f172a; border-radius: 8px; font-size: 14px; transition: all 0.2s ease; }
         input:focus, select:focus { border-color: #16a34a; outline: none; background: #fff; box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.1); }
         
         .desc-box { background: #f1f5f9; border: 1px solid #e2e8f0; padding: 12px; border-radius: 8px; margin-top: 12px; font-size: 12px; color: #334155; white-space: pre-line; display: none; line-height: 1.5; }
+        .helper-text { font-size: 11px; color: #64748b; margin-top: 4px; }
         
         button { width: 100%; padding: 14px; background: #16a34a; border: none; color: white; font-weight: 600; border-radius: 8px; cursor: pointer; margin-top: 20px; font-size: 15px; transition: background 0.2s; }
         button:hover { background: #15803d; }
@@ -79,7 +89,8 @@ TEMPLATE = """
     <div class="dashboard">
         <div class="card">
             <div class="brand">
-                <h2><span class="red-text">AS</span> <span class="green-text">ELUTION</span></h2>
+                <h2><span class="red-text">AS</span> <span class="green-text">illusion</span></h2>
+                <span class="menu-icon">☰</span>
             </div>
             {% if not logged_in %}
                 {% if error %}
@@ -95,9 +106,9 @@ TEMPLATE = """
                     <div class="alert {{ 'alert-success' if 'Success' in message or 'ID' in message else 'alert-error' }}">{{ message }}</div>
                 {% endif %}
                 <form method="POST" action="/order">
-                    <label>Select Service</label>
+                    <label>Service</label>
                     <select name="service" id="serviceSelect" onchange="updateServiceDetails()" required>
-                        <option value="" disabled selected>Choose a service...</option>
+                        <option value="" disabled selected>Choose Instagram service...</option>
                         {% for s in services %}
                             <option value="{{ s.service }}" data-rate="{{ s.rate }}" data-desc="{{ s.description }}">
                                 {{ s.name }} (₹{{ s.rate }}/1k)
@@ -113,8 +124,9 @@ TEMPLATE = """
                     
                     <label>Quantity</label>
                     <input type="number" name="quantity" id="qtyInput" oninput="updateServiceDetails()" placeholder="Quantity" required>
+                    <div class="helper-text">Enter required quantity</div>
                     
-                    <label>Total Charge</label>
+                    <label>Charge</label>
                     <input type="text" id="chargeInput" value="₹ 0.00" disabled style="background: #e2e8f0; font-weight: bold; color: #16a34a;">
                     
                     <button type="submit">Submit Order</button>
