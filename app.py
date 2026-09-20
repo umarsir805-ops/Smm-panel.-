@@ -1,4 +1,3 @@
-
 from flask import Flask, redirect, render_template_string, request, session, url_for
 import requests
 
@@ -19,7 +18,7 @@ def fetch_services():
                 name_lower = s.get('name', '').lower()
                 cat_lower = s.get('category', '').lower()
                 if 'instagram' in name_lower or 'instagram' in cat_lower:
-                    if any(keyword in name_lower for keyword in ['follower', 'like', 'view', 'reel', 'post']):
+                    if any(keyword in name_lower for keyword in ['follower', 'like', 'view', 'comment', 'reel', 'post']):
                         filtered.append(s)
             return filtered if filtered else data[:20]
     except Exception:
@@ -119,8 +118,8 @@ TEMPLATE = """
                     <label>Description</label>
                     <div class="desc-box" id="descBox"></div>
                     
-                    <label>Link</label>
-                    <input type="text" name="link" placeholder="https://instagram.com/..." required>
+                    <label>Link / Username</label>
+                    <input type="text" name="link" placeholder="Profile link or Username" required>
                     
                     <label>Quantity</label>
                     <input type="number" name="quantity" id="qtyInput" oninput="updateServiceDetails()" placeholder="Quantity" required>
@@ -162,8 +161,11 @@ def order():
         return redirect(url_for('home'))
     
     service_id = request.form.get("service")
-    target_link = request.form.get("link")
+    target_link = request.form.get("link", "").strip()
     quantity = request.form.get("quantity")
+    
+    if "instagram.com/" in target_link:
+        target_link = target_link.split("?")[0].rstrip("/")
     
     payload = {
         'key': API_KEY,
