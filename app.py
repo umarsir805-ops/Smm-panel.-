@@ -19,7 +19,6 @@ def fetch_services():
                 cat_lower = s.get('category', '').lower()
                 if 'instagram' in name_lower or 'instagram' in cat_lower:
                     if any(keyword in name_lower for keyword in ['follower', 'like', 'view', 'reel', 'post', 'comment']):
-                        # Un services ko hata do jo ajeeb format maangti hain
                         if 'package' not in name_lower:
                             filtered.append(s)
             return filtered if filtered else data[:20]
@@ -332,7 +331,6 @@ def order():
     target_link = request.form.get("link", "").strip()
     quantity = request.form.get("quantity")
     
-    # Advanced Cleaner for Links & Usernames
     if "instagram.com/" in target_link:
         target_link = target_link.split("?")[0].rstrip("/")
         parts = [p for p in target_link.split("/") if p]
@@ -351,8 +349,12 @@ def order():
         'quantity': quantity
     }
     
+    headers = {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'
+    }
+    
     try:
-        response = requests.post(API_URL, data=payload, timeout=15)
+        response = requests.post(API_URL, data=payload, headers=headers, timeout=15)
         res_json = response.json()
         if 'order' in res_json:
             message = f"Success! Order ID: {res_json['order']}"
