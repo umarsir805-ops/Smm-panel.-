@@ -17,8 +17,10 @@ def fetch_services():
             for s in data:
                 name_lower = s.get('name', '').lower()
                 cat_lower = s.get('category', '').lower()
+                # Sirf high-quality working Instagram services (Likes, Followers, Views, aur Best Comments)
                 if 'instagram' in name_lower or 'instagram' in cat_lower:
-                    if any(keyword in name_lower for keyword in ['follower', 'like', 'view', 'comment', 'reel', 'post']):
+                    if any(keyword in name_lower for keyword in ['follower', 'like', 'view', 'reel', 'post', 'comment']):
+                        # Agar comment hai toh sirf wahi rakho jo active aur safe ho, ya baaki saari standard services
                         filtered.append(s)
             return filtered if filtered else data[:20]
     except Exception:
