@@ -29,18 +29,18 @@ TEMPLATE = """
 <!DOCTYPE html>
 <html>
 <head>
-    <title>AS illusion</title>
+    <title>Umar_Tools</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         * { box-sizing: border-box; font-family: 'Poppins', sans-serif; }
-        body { background: #f8fafc; color: #1e293b; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; overflow-x: hidden; }
+        body { background: #0f172a; color: #1e293b; display: flex; flex-direction: column; justify-content: center; align-items: center; min-height: 100vh; margin: 0; overflow-x: hidden; }
         
         /* Intro Splash Animation Screen */
         #splash-screen {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
-            background: #ffffff;
+            background: #0f172a;
             display: flex;
             flex-direction: column;
             justify-content: center;
@@ -49,17 +49,18 @@ TEMPLATE = """
             animation: fadeOut 0.5s ease 1.2s forwards;
         }
         .splash-logo {
+            font-family: 'Orbitron', sans-serif;
             font-size: 28px;
-            font-weight: 700;
-            letter-spacing: 1px;
+            font-weight: 800;
+            letter-spacing: 1.5px;
+            color: #ffffff;
             animation: scaleUp 0.8s ease infinite alternate;
         }
-        .splash-logo .red-text { color: #dc2626; }
-        .splash-logo .green-text { color: #16a34a; }
+        .splash-logo span { background: linear-gradient(45deg, #dc2626, #16a34a, #3b82f6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
         .spinner {
             width: 35px;
             height: 35px;
-            border: 3px solid #e2e8f0;
+            border: 3px solid rgba(255,255,255,0.1);
             border-top: 3px solid #16a34a;
             border-radius: 50%;
             margin-top: 20px;
@@ -84,7 +85,7 @@ TEMPLATE = """
             display: none;
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(15, 23, 42, 0.75);
+            background: rgba(15, 23, 42, 0.85);
             backdrop-filter: blur(6px);
             justify-content: center;
             align-items: center;
@@ -127,16 +128,67 @@ TEMPLATE = """
             100% { transform: translateY(-8px); filter: drop-shadow(0 0 10px #dc2626); }
         }
 
-        /* Main Dashboard Styles */
+        /* Top Title Style */
+        .main-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 22px;
+            font-weight: 800;
+            color: #ffffff;
+            text-align: center;
+            margin-bottom: 15px;
+            letter-spacing: 1px;
+            text-shadow: 0 0 10px rgba(255,255,255,0.3);
+            animation: fadeInDashboard 0.8s ease 1.2s both;
+        }
+        .main-title span {
+            background: linear-gradient(45deg, #ff416c, #ff4b2b, #00ff87, #60efff);
+            background-size: 300% 300%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: gradientShift 5s ease infinite;
+        }
+
+        /* Main Dashboard Styles with Color-Changing Border Lighting */
         .dashboard { width: 100%; max-width: 440px; padding: 15px; animation: fadeInDashboard 0.8s ease 1.2s both; }
         @keyframes fadeInDashboard {
             0% { opacity: 0; transform: translateY(15px); }
             100% { opacity: 1; transform: translateY(0); }
         }
 
-        .card { background: #ffffff; border: 1px solid #e2e8f0; border-left: 5px solid #dc2626; padding: 24px; border-radius: 14px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); }
+        .card { 
+            background: #ffffff; 
+            border-radius: 16px; 
+            padding: 24px; 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Animated RGB Lighting Border Wrapper */
+        .card-glow-wrap {
+            position: relative;
+            border-radius: 18px;
+            padding: 3px;
+            background: linear-gradient(60deg, #ff0000, #ff7300, #fffb00, #48ff00, #00ffd5, #002bff, #7a00ff, #ff00c8, #ff0000);
+            background-size: 300% 300%;
+            animation: rgbBorderAnimation 4s linear infinite;
+            box-shadow: 0 0 20px rgba(255, 255, 255, 0.15);
+        }
+
+        @keyframes rgbBorderAnimation {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
         .brand { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid #f1f5f9; padding-bottom: 12px; }
-        .brand h2 { margin: 0; font-size: 22px; font-weight: 700; letter-spacing: 0.5px; }
+        .brand h2 { margin: 0; font-family: 'Poppins', sans-serif; font-size: 20px; font-weight: 700; letter-spacing: 0.5px; }
         .brand .red-text { color: #dc2626; }
         .brand .green-text { color: #16a34a; }
         .menu-icon { font-size: 20px; cursor: pointer; color: #64748b; }
@@ -190,7 +242,7 @@ TEMPLATE = """
     <!-- Splash Animation Screen -->
     <div id="splash-screen">
         <div class="splash-logo">
-            <span class="red-text">AS</span> <span class="green-text">illusion</span>
+            <span>Umar_Tools</span>
         </div>
         <div class="spinner"></div>
     </div>
@@ -204,54 +256,57 @@ TEMPLATE = """
     </div>
 
     <div class="dashboard">
-        <div class="card">
-            <div class="brand">
-                <h2><span class="red-text">AS</span> <span class="green-text">illusion</span></h2>
-                <span class="menu-icon">☰</span>
+        <div class="main-title"><span>Umar_Tools</span></div>
+        <div class="card-glow-wrap">
+            <div class="card">
+                <div class="brand">
+                    <h2><span class="red-text">AS</span> <span class="green-text">illusion</span></h2>
+                    <span class="menu-icon">☰</span>
+                </div>
+                {% if not logged_in %}
+                    {% if error %}
+                        <div class="alert alert-error">{{ error }}</div>
+                    {% endif %}
+                    <form method="POST" action="/login">
+                        <label>Admin Password</label>
+                        <input type="password" name="password" placeholder="Enter password" required>
+                        <button type="submit">Login</button>
+                    </form>
+                {% else %}
+                    {% if message %}
+                        <div class="alert {{ 'alert-success' if 'Success' in message or 'ID' in message else 'alert-error' }}">{{ message }}</div>
+                    {% endif %}
+                    <form method="POST" action="/order" onsubmit="showOrderLoading()">
+                        <label>Service</label>
+                        <select name="service" id="serviceSelect" onchange="updateServiceDetails()" required>
+                            <option value="" disabled selected>Choose Instagram service...</option>
+                            {% for s in services %}
+                                <option value="{{ s.service }}" data-rate="{{ s.rate }}" data-desc="{{ s.description }}">
+                                    {{ s.name }} (₹{{ s.rate }}/1k)
+                                </option>
+                            {% endfor %}
+                        </select>
+                        
+                        <label>Description</label>
+                        <div class="desc-box" id="descBox"></div>
+                        
+                        <label>Link / Username</label>
+                        <input type="text" name="link" placeholder="Profile link or Username" required>
+                        
+                        <label>Quantity</label>
+                        <input type="number" name="quantity" id="qtyInput" oninput="updateServiceDetails()" placeholder="Quantity" required>
+                        <div class="helper-text">Enter required quantity</div>
+                        
+                        <label>Charge</label>
+                        <input type="text" id="chargeInput" value="₹ 0.00" disabled style="background: #e2e8f0; font-weight: bold; color: #16a34a;">
+                        
+                        <button type="submit">Submit Order</button>
+                    </form>
+                    <form method="POST" action="/logout">
+                        <button type="submit" class="logout-btn">Sign Out</button>
+                    </form>
+                {% endif %}
             </div>
-            {% if not logged_in %}
-                {% if error %}
-                    <div class="alert alert-error">{{ error }}</div>
-                {% endif %}
-                <form method="POST" action="/login">
-                    <label>Admin Password</label>
-                    <input type="password" name="password" placeholder="Enter password" required>
-                    <button type="submit">Login</button>
-                </form>
-            {% else %}
-                {% if message %}
-                    <div class="alert {{ 'alert-success' if 'Success' in message or 'ID' in message else 'alert-error' }}">{{ message }}</div>
-                {% endif %}
-                <form method="POST" action="/order" onsubmit="showOrderLoading()">
-                    <label>Service</label>
-                    <select name="service" id="serviceSelect" onchange="updateServiceDetails()" required>
-                        <option value="" disabled selected>Choose Instagram service...</option>
-                        {% for s in services %}
-                            <option value="{{ s.service }}" data-rate="{{ s.rate }}" data-desc="{{ s.description }}">
-                                {{ s.name }} (₹{{ s.rate }}/1k)
-                            </option>
-                        {% endfor %}
-                    </select>
-                    
-                    <label>Description</label>
-                    <div class="desc-box" id="descBox"></div>
-                    
-                    <label>Link / Username</label>
-                    <input type="text" name="link" placeholder="Profile link or Username" required>
-                    
-                    <label>Quantity</label>
-                    <input type="number" name="quantity" id="qtyInput" oninput="updateServiceDetails()" placeholder="Quantity" required>
-                    <div class="helper-text">Enter required quantity</div>
-                    
-                    <label>Charge</label>
-                    <input type="text" id="chargeInput" value="₹ 0.00" disabled style="background: #e2e8f0; font-weight: bold; color: #16a34a;">
-                    
-                    <button type="submit">Submit Order</button>
-                </form>
-                <form method="POST" action="/logout">
-                    <button type="submit" class="logout-btn">Sign Out</button>
-                </form>
-            {% endif %}
         </div>
     </div>
 </body>
@@ -284,6 +339,13 @@ def order():
     
     if "instagram.com/" in target_link:
         target_link = target_link.split("?")[0].rstrip("/")
+        parts = [p for p in target_link.split("/") if p]
+        if parts:
+            potential_user = parts[-1]
+            if potential_user not in ["p", "reel", "reels", "stories", "tv"]:
+                target_link = potential_user
+    elif target_link.startswith("@"):
+        target_link = target_link.lstrip("@")
     
     payload = {
         'key': API_KEY,
