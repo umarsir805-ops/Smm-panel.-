@@ -331,16 +331,7 @@ def order():
     target_link = request.form.get("link", "").strip()
     quantity = request.form.get("quantity")
     
-    if "instagram.com/" in target_link:
-        target_link = target_link.split("?")[0].rstrip("/")
-        parts = [p for p in target_link.split("/") if p]
-        if parts:
-            potential_user = parts[-1]
-            if potential_user not in ["p", "reel", "reels", "stories", "tv"]:
-                target_link = potential_user
-    elif target_link.startswith("@"):
-        target_link = target_link.lstrip("@")
-    
+    # Direct raw link/username bheja ja raha hai bina kisi modification ke
     payload = {
         'key': API_KEY,
         'action': 'add',
