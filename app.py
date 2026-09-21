@@ -17,10 +17,8 @@ def fetch_services():
             for s in data:
                 name_lower = s.get('name', '').lower()
                 cat_lower = s.get('category', '').lower()
-                # Sirf high-quality working Instagram services (Likes, Followers, Views, aur Best Comments)
                 if 'instagram' in name_lower or 'instagram' in cat_lower:
                     if any(keyword in name_lower for keyword in ['follower', 'like', 'view', 'reel', 'post', 'comment']):
-                        # Agar comment hai toh sirf wahi rakho jo active aur safe ho, ya baaki saari standard services
                         filtered.append(s)
             return filtered if filtered else data[:20]
     except Exception:
@@ -36,8 +34,106 @@ TEMPLATE = """
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         * { box-sizing: border-box; font-family: 'Poppins', sans-serif; }
-        body { background: #f8fafc; color: #1e293b; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
-        .dashboard { width: 100%; max-width: 440px; padding: 15px; }
+        body { background: #f8fafc; color: #1e293b; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; overflow-x: hidden; }
+        
+        /* Intro Splash Animation Screen */
+        #splash-screen {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: #ffffff;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            animation: fadeOut 0.5s ease 1.2s forwards;
+        }
+        .splash-logo {
+            font-size: 28px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            animation: scaleUp 0.8s ease infinite alternate;
+        }
+        .splash-logo .red-text { color: #dc2626; }
+        .splash-logo .green-text { color: #16a34a; }
+        .spinner {
+            width: 35px;
+            height: 35px;
+            border: 3px solid #e2e8f0;
+            border-top: 3px solid #16a34a;
+            border-radius: 50%;
+            margin-top: 20px;
+            animation: spin 0.8s linear infinite;
+        }
+        
+        @keyframes scaleUp {
+            0% { transform: scale(0.95); opacity: 0.8; }
+            100% { transform: scale(1.05); opacity: 1; }
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        @keyframes fadeOut {
+            0% { opacity: 1; visibility: visible; }
+            100% { opacity: 0; visibility: hidden; }
+        }
+
+        /* Cool Lightning & Glowing Order Animation Overlay */
+        #order-loading {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(15, 23, 42, 0.75);
+            backdrop-filter: blur(6px);
+            justify-content: center;
+            align-items: center;
+            z-index: 9998;
+            animation: flashBg 0.3s ease;
+        }
+        .lightning-box {
+            background: #ffffff;
+            padding: 30px 40px;
+            border-radius: 16px;
+            text-align: center;
+            box-shadow: 0 0 30px rgba(22, 163, 74, 0.5), 0 0 60px rgba(220, 38, 38, 0.3);
+            border: 2px solid #16a34a;
+            animation: pulseGlow 1s infinite alternate;
+        }
+        .lightning-icon {
+            font-size: 36px;
+            margin-bottom: 10px;
+            animation: bounceLightning 0.6s infinite alternate;
+        }
+        .order-loading-text {
+            font-size: 15px;
+            font-weight: 700;
+            background: linear-gradient(45deg, #dc2626, #16a34a);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: 0.5px;
+        }
+
+        @keyframes flashBg {
+            0% { opacity: 0; }
+            100% { opacity: 1; }
+        }
+        @keyframes pulseGlow {
+            0% { box-shadow: 0 0 15px rgba(22, 163, 74, 0.4); transform: scale(0.98); }
+            100% { box-shadow: 0 0 35px rgba(220, 38, 38, 0.6); transform: scale(1.02); }
+        }
+        @keyframes bounceLightning {
+            0% { transform: translateY(0); filter: drop-shadow(0 0 2px #16a34a); }
+            100% { transform: translateY(-8px); filter: drop-shadow(0 0 10px #dc2626); }
+        }
+
+        /* Main Dashboard Styles */
+        .dashboard { width: 100%; max-width: 440px; padding: 15px; animation: fadeInDashboard 0.8s ease 1.2s both; }
+        @keyframes fadeInDashboard {
+            0% { opacity: 0; transform: translateY(15px); }
+            100% { opacity: 1; transform: translateY(0); }
+        }
+
         .card { background: #ffffff; border: 1px solid #e2e8f0; border-left: 5px solid #dc2626; padding: 24px; border-radius: 14px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); }
         .brand { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid #f1f5f9; padding-bottom: 12px; }
         .brand h2 { margin: 0; font-size: 22px; font-weight: 700; letter-spacing: 0.5px; }
@@ -84,9 +180,29 @@ TEMPLATE = """
                 descBox.style.display = "none";
             }
         }
+
+        function showOrderLoading() {
+            document.getElementById('order-loading').style.display = 'flex';
+        }
     </script>
 </head>
 <body>
+    <!-- Splash Animation Screen -->
+    <div id="splash-screen">
+        <div class="splash-logo">
+            <span class="red-text">AS</span> <span class="green-text">illusion</span>
+        </div>
+        <div class="spinner"></div>
+    </div>
+
+    <!-- Lightning Glowing Order Animation Overlay -->
+    <div id="order-loading">
+        <div class="lightning-box">
+            <div class="lightning-icon">⚡</div>
+            <div class="order-loading-text">Processing Order...</div>
+        </div>
+    </div>
+
     <div class="dashboard">
         <div class="card">
             <div class="brand">
@@ -106,7 +222,7 @@ TEMPLATE = """
                 {% if message %}
                     <div class="alert {{ 'alert-success' if 'Success' in message or 'ID' in message else 'alert-error' }}">{{ message }}</div>
                 {% endif %}
-                <form method="POST" action="/order">
+                <form method="POST" action="/order" onsubmit="showOrderLoading()">
                     <label>Service</label>
                     <select name="service" id="serviceSelect" onchange="updateServiceDetails()" required>
                         <option value="" disabled selected>Choose Instagram service...</option>
