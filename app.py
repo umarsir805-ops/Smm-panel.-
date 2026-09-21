@@ -19,7 +19,9 @@ def fetch_services():
                 cat_lower = s.get('category', '').lower()
                 if 'instagram' in name_lower or 'instagram' in cat_lower:
                     if any(keyword in name_lower for keyword in ['follower', 'like', 'view', 'reel', 'post', 'comment']):
-                        filtered.append(s)
+                        # Un services ko hata do jo ajeeb format maangti hain
+                        if 'package' not in name_lower:
+                            filtered.append(s)
             return filtered if filtered else data[:20]
     except Exception:
         pass
@@ -36,7 +38,6 @@ TEMPLATE = """
         * { box-sizing: border-box; font-family: 'Poppins', sans-serif; }
         body { background: #0f172a; color: #1e293b; display: flex; flex-direction: column; justify-content: center; align-items: center; min-height: 100vh; margin: 0; overflow-x: hidden; }
         
-        /* Intro Splash Animation Screen */
         #splash-screen {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
@@ -80,7 +81,6 @@ TEMPLATE = """
             100% { opacity: 0; visibility: hidden; }
         }
 
-        /* Cool Lightning & Glowing Order Animation Overlay */
         #order-loading {
             display: none;
             position: fixed;
@@ -128,7 +128,6 @@ TEMPLATE = """
             100% { transform: translateY(-8px); filter: drop-shadow(0 0 10px #dc2626); }
         }
 
-        /* Top Title Style */
         .main-title {
             font-family: 'Orbitron', sans-serif;
             font-size: 22px;
@@ -148,7 +147,6 @@ TEMPLATE = """
             animation: gradientShift 5s ease infinite;
         }
 
-        /* Main Dashboard Styles with Color-Changing Border Lighting */
         .dashboard { width: 100%; max-width: 440px; padding: 15px; animation: fadeInDashboard 0.8s ease 1.2s both; }
         @keyframes fadeInDashboard {
             0% { opacity: 0; transform: translateY(15px); }
@@ -164,7 +162,6 @@ TEMPLATE = """
             z-index: 1;
         }
 
-        /* Animated RGB Lighting Border Wrapper */
         .card-glow-wrap {
             position: relative;
             border-radius: 18px;
@@ -239,7 +236,6 @@ TEMPLATE = """
     </script>
 </head>
 <body>
-    <!-- Splash Animation Screen -->
     <div id="splash-screen">
         <div class="splash-logo">
             <span>Umar_Tools</span>
@@ -247,7 +243,6 @@ TEMPLATE = """
         <div class="spinner"></div>
     </div>
 
-    <!-- Lightning Glowing Order Animation Overlay -->
     <div id="order-loading">
         <div class="lightning-box">
             <div class="lightning-icon">⚡</div>
@@ -337,6 +332,7 @@ def order():
     target_link = request.form.get("link", "").strip()
     quantity = request.form.get("quantity")
     
+    # Advanced Cleaner for Links & Usernames
     if "instagram.com/" in target_link:
         target_link = target_link.split("?")[0].rstrip("/")
         parts = [p for p in target_link.split("/") if p]
@@ -356,7 +352,7 @@ def order():
     }
     
     try:
-        response = requests.post(API_URL, data=payload)
+        response = requests.post(API_URL, data=payload, timeout=15)
         res_json = response.json()
         if 'order' in res_json:
             message = f"Success! Order ID: {res_json['order']}"
