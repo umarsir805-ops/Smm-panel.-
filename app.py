@@ -4,13 +4,13 @@ import requests
 app = Flask(__name__)
 app.secret_key = "umar_secret_key_123"
 
-API_URL = "https://cheapestsmmpanels.com/api/v2"
-API_KEY = "7f10f519fa301e5ac7ef9109abe3487e"
+API_URL = "https://sparkyinfluence.in/api/v2"
+API_KEY = "6016e188a1f7a6bb303f16eb539f9a96"
 PANEL_PASSWORD = "UMAR ALI 007"
 
 def fetch_services():
     try:
-        response = requests.post(API_URL, data={"key": API_KEY, "action": "services"})
+        response = requests.post(API_URL, data={"key": API_KEY, "action": "services"}, timeout=10)
         data = response.json()
         if isinstance(data, list):
             filtered = []
@@ -331,7 +331,6 @@ def order():
     target_link = request.form.get("link", "").strip()
     quantity = request.form.get("quantity")
     
-    # Direct raw link/username bheja ja raha hai bina kisi modification ke
     payload = {
         'key': API_KEY,
         'action': 'add',
@@ -341,16 +340,19 @@ def order():
     }
     
     headers = {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
     }
     
+    message = ""
     try:
         response = requests.post(API_URL, data=payload, headers=headers, timeout=15)
         res_json = response.json()
-        if 'order' in res_json:
+        if isinstance(res_json, dict) and 'order' in res_json:
             message = f"Success! Order ID: {res_json['order']}"
+        elif isinstance(res_json, dict) and 'error' in res_json:
+            message = f"Error: {res_json['error']}"
         else:
-            message = f"Error: {res_json.get('error', 'API rejected order')}"
+            message = "Error: API returned unexpected response format"
     except Exception as e:
         message = f"Connection Error: {e}"
         
