@@ -18,7 +18,7 @@ def fetch_services():
                 name_lower = s.get('name', '').lower()
                 cat_lower = s.get('category', '').lower()
                 if 'instagram' in name_lower or 'instagram' in cat_lower:
-                    if any(keyword in name_lower for keyword in ['follower', 'like', 'view', 'reel', 'post', 'comment']):
+                    if any(keyword in name_lower for keyword in ['follower', 'like', 'view', 'reel', 'post', 'comment', 'share', 'repost']):
                         if 'package' not in name_lower:
                             filtered.append(s)
             return filtered if filtered else data[:20]
