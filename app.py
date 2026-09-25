@@ -8,27 +8,15 @@ app.secret_key = "umar_secret_key_super_secure"
 API_URL = "https://sparkyinfluence.in/api/v2"
 API_KEY = "6016e188a1f7a6bb303f16eb539f9a96"
 
-# Yahan apna username daal de jo tu login ke liye use karega, isko hamesha unlimited balance milega!
-ADMIN_USERNAME = "umar" 
+# Yahan apna password set kar de jo tu panel kholne ke liye chahta hai
+PANEL_PASSWORD = "umar"
 
-# Database Initialization
 def init_db():
     conn = sqlite3.connect('database.db')
     cursor = conn.cursor()
-    # Users table
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS users (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            username TEXT UNIQUE NOT NULL,
-            password TEXT NOT NULL,
-            balance REAL DEFAULT 0.0
-        )
-    ''')
-    # Orders table
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS orders (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
-            username TEXT NOT NULL,
             service_name TEXT NOT NULL,
             link TEXT NOT NULL,
             quantity INTEGER NOT NULL,
@@ -41,18 +29,6 @@ def init_db():
     conn.close()
 
 init_db()
-
-def get_user_balance(username):
-    # Agar admin login hai, toh use hamesha unlimited/high balance dikhayega
-    if username.lower() == ADMIN_USERNAME.lower():
-        return 99999.0
-        
-    conn = sqlite3.connect('database.db')
-    cursor = conn.cursor()
-    cursor.execute("SELECT balance FROM users WHERE username = ?", (username,))
-    row = cursor.fetchone()
-    conn.close()
-    return row[0] if row else 0.0
 
 def fetch_services():
     try:
@@ -133,18 +109,6 @@ TEMPLATE = """
         .brand h2 { margin: 0; font-size: 18px; font-weight: 700; }
         .brand .red-text { color: #dc2626; }
         .brand .green-text { color: #16a34a; }
-        
-        .wallet-badge {
-            background: #dcfce7;
-            color: #166534;
-            padding: 6px 12px;
-            border-radius: 20px;
-            font-size: 13px;
-            font-weight: 600;
-            display: inline-block;
-            margin-bottom: 15px;
-            border: 1px solid #bbf7d0;
-        }
 
         label { font-size: 13px; font-weight: 600; color: #16a34a; display: block; margin-top: 12px; margin-bottom: 6px; }
         input, select { width: 100%; padding: 12px; background: #f8fafc; border: 1px solid #cbd5e1; color: #0f172a; border-radius: 8px; font-size: 14px; transition: all 0.2s ease; }
@@ -154,9 +118,6 @@ TEMPLATE = """
         
         button { width: 100%; padding: 14px; background: #16a34a; border: none; color: white; font-weight: 600; border-radius: 8px; cursor: pointer; margin-top: 15px; font-size: 15px; transition: background 0.2s; }
         button:hover { background: #15803d; }
-        
-        .secondary-btn { background: #3b82f6; margin-top: 8px; }
-        .secondary-btn:hover { background: #2563eb; }
 
         .logout-btn { background: transparent; border: 1px solid #cbd5e1; color: #64748b; margin-top: 8px; }
         .logout-btn:hover { background: #f1f5f9; color: #0f172a; }
@@ -164,8 +125,6 @@ TEMPLATE = """
         .alert { padding: 10px; border-radius: 8px; font-size: 13px; margin-bottom: 15px; text-align: center; font-weight: 500; }
         .alert-success { background: #dcfce7; color: #166534; border: 1px solid #bbf7d0; }
         .alert-error { background: #fee2e2; color: #991b1b; border: 1px solid #fecaca; }
-        .switch-text { text-align: center; font-size: 12px; margin-top: 15px; color: #64748b; }
-        .switch-text a { color: #16a34a; text-decoration: none; font-weight: 600; }
     </style>
     <script>
         function updateServiceDetails() {
@@ -199,10 +158,8 @@ TEMPLATE = """
             <div class="card">
                 <div class="brand">
                     <h2><span class="red-text">AS</span> <span class="green-text">illusion</span></h2>
-                    {% if username %}
-                        <span style="font-size: 12px; color: #64748b;">
-                            {% if is_admin %}👑 Admin{% else %}Hi, {{ username }}{% endif %}
-                        </span>
+                    {% if logged_in %}
+                        <span style="font-size: 12px; color: #16a34a; font-weight: 600;">🔓 Unlocked</span>
                     {% endif %}
                 </div>
 
@@ -213,48 +170,13 @@ TEMPLATE = """
                     <div class="alert alert-success">{{ message }}</div>
                 {% endif %}
 
-                {% if page == 'login' %}
+                {% if not logged_in %}
                     <form method="POST" action="/login">
-                        <label>Username</label>
-                        <input type="text" name="username" placeholder="Enter username" required>
-                        <label>Password</label>
+                        <label>Enter Panel Password</label>
                         <input type="password" name="password" placeholder="Enter password" required>
-                        <button type="submit">Login</button>
+                        <button type="submit">Access Panel</button>
                     </form>
-                    <div class="switch-text">Don't have an account? <a href="/register">Sign Up</a></div>
-
-                {% elif page == 'register' %}
-                    <form method="POST" action="/register">
-                        <label>Choose Username</label>
-                        <input type="text" name="username" placeholder="Choose username" required>
-                        <label>Choose Password</label>
-                        <input type="password" name="password" placeholder="Choose password" required>
-                        <button type="submit">Register Account</button>
-                    </form>
-                    <div class="switch-text">Already have an account? <a href="/login">Login</a></div>
-
-                {% elif page == 'add_funds' %}
-                    <div class="wallet-badge">Wallet Balance: ₹ {{ "%.2f"|format(balance) }}</div>
-                    <div style="text-align: center; margin-bottom: 15px;">
-                        <p style="font-size: 13px; color: #475569; margin-bottom: 8px;">Scan QR to Pay via UPI:</p>
-                        <div style="background: #f1f5f9; padding: 15px; border-radius: 12px; display: inline-block; font-weight: bold; color: #1e293b; border: 1px dashed #cbd5e1;">
-                            [ 📱 YOUR UPI QR CODE HERE ]<br>
-                            <span style="font-size: 11px; color: #64748b;">UPI ID: yourname@oksbi</span>
-                        </div>
-                    </div>
-                    <form method="POST" action="/add_funds">
-                        <label>Enter Amount Paid (₹)</label>
-                        <input type="number" name="amount" placeholder="e.g. 100" required>
-                        <button type="submit">Add to Wallet Instantly</button>
-                    </form>
-                    <form action="/" method="GET">
-                        <button type="submit" class="logout-btn">Back to Dashboard</button>
-                    </form>
-
                 {% else %}
-                    <div class="wallet-badge">Wallet Balance: ₹ {{ "%.2f"|format(balance) }}</div>
-                    <a href="/add_funds"><button type="button" class="secondary-btn" style="margin-top:0; margin-bottom:15px;">➕ Add Funds (UPI)</button></a>
-
                     <form method="POST" action="/order">
                         <label>Service</label>
                         <select name="service" id="serviceSelect" onchange="updateServiceDetails()" required>
@@ -281,7 +203,7 @@ TEMPLATE = """
                         <button type="submit">Submit Order</button>
                     </form>
                     <form method="POST" action="/logout">
-                        <button type="submit" class="logout-btn">Sign Out</button>
+                        <button type="submit" class="logout-btn">Lock Panel</button>
                     </form>
                 {% endif %}
             </div>
@@ -293,95 +215,26 @@ TEMPLATE = """
 
 @app.route("/")
 def home():
-    if 'username' not in session:
-        return redirect(url_for('login'))
-    
-    username = session['username']
-    is_admin = (username.lower() == ADMIN_USERNAME.lower())
-    balance = get_user_balance(username)
-    services = fetch_services()
-    
-    return render_template_string(TEMPLATE, page='dashboard', username=username, is_admin=is_admin, balance=balance, services=services)
+    logged_in = session.get('logged_in', False)
+    services = fetch_services() if logged_in else []
+    return render_template_string(TEMPLATE, logged_in=logged_in, services=services)
 
-@app.route("/login", methods=["GET", "POST"])
+@app.route("/login", methods=["POST"])
 def login():
     error = None
-    if request.method == "POST":
-        username = request.form.get("username").strip()
-        password = request.form.get("password").strip()
-        
-        # Agar admin pehli baar login kar raha hai aur database mein nahi hai, toh auto-create kar do
-        if username.lower() == ADMIN_USERNAME.lower():
-            session['username'] = username
-            return redirect(url_for('home'))
-            
-        conn = sqlite3.connect('database.db')
-        cursor = conn.cursor()
-        cursor.execute("SELECT password FROM users WHERE username = ?", (username,))
-        row = cursor.fetchone()
-        conn.close()
-        
-        if row and row[0] == password:
-            session['username'] = username
-            return redirect(url_for('home'))
-        else:
-            error = "Invalid Username or Password!"
-            
-    return render_template_string(TEMPLATE, page='login', error=error)
-
-@app.route("/register", methods=["GET", "POST"])
-def register():
-    error = None
-    message = None
-    if request.method == "POST":
-        username = request.form.get("username").strip()
-        password = request.form.get("password").strip()
-        
-        if username.lower() == ADMIN_USERNAME.lower():
-            error = "This username is reserved for Admin!"
-        else:
-            try:
-                conn = sqlite3.connect('database.db')
-                cursor = conn.cursor()
-                cursor.execute("INSERT INTO users (username, password, balance) VALUES (?, ?, ?)", (username, password, 0.0))
-                conn.commit()
-                conn.close()
-                return redirect(url_for('login'))
-            except sqlite3.IntegrityError:
-                error = "Username already exists! Choose another."
-                
-    return render_template_string(TEMPLATE, page='register', error=error, message=message)
-
-@app.route("/add_funds", methods=["GET", "POST"])
-def add_funds():
-    if 'username' not in session:
-        return redirect(url_for('login'))
-    
-    username = session['username']
-    is_admin = (username.lower() == ADMIN_USERNAME.lower())
-    
-    if request.method == "POST" and not is_admin:
-        try:
-            amount = float(request.form.get("amount", 0))
-            if amount > 0:
-                conn = sqlite3.connect('database.db')
-                cursor = conn.cursor()
-                cursor.execute("UPDATE users SET balance = balance + ? WHERE username = ?", (amount, username))
-                conn.commit()
-                conn.close()
-        except ValueError:
-            pass
-            
-    balance = get_user_balance(username)
-    return render_template_string(TEMPLATE, page='add_funds', username=username, is_admin=is_admin, balance=balance)
+    password = request.form.get("password", "").strip()
+    if password == PANEL_PASSWORD:
+        session['logged_in'] = True
+    else:
+        error = "Incorrect Password!"
+        return render_template_string(TEMPLATE, logged_in=False, error=error)
+    return redirect(url_for('home'))
 
 @app.route("/order", methods=["POST"])
 def order():
-    if 'username' not in session:
+    if not session.get('logged_in', False):
         return redirect(url_for('home'))
     
-    username = session['username']
-    is_admin = (username.lower() == ADMIN_USERNAME.lower())
     service_id = request.form.get("service")
     target_link = request.form.get("link", "").strip()
     quantity_str = request.form.get("quantity")
@@ -401,22 +254,7 @@ def order():
             break
             
     total_charge = (quantity / 1000) * rate
-    current_balance = get_user_balance(username)
     
-    if current_balance < total_charge:
-        return render_template_string(TEMPLATE, page='dashboard', username=username, is_admin=is_admin, balance=current_balance, services=services, error="Insufficient wallet balance! Please add funds.")
-        
-    # Deduct balance (agar normal user hai toh database se minus hoga)
-    conn = sqlite3.connect('database.db')
-    cursor = conn.cursor()
-    
-    if not is_admin:
-        new_balance = current_balance - total_charge
-        cursor.execute("UPDATE users SET balance = ? WHERE username = ?", (new_balance, username))
-        conn.commit()
-    else:
-        new_balance = current_balance
-        
     payload = {
         'key': API_KEY,
         'action': 'add',
@@ -434,32 +272,25 @@ def order():
             api_order_id = str(res_json['order'])
             message = f"Success! Order ID: {api_order_id}"
         elif isinstance(res_json, dict) and 'error' in res_json:
-            if not is_admin:
-                cursor.execute("UPDATE users SET balance = balance + ? WHERE username = ?", (total_charge, username))
-                conn.commit()
             message = f"Error from Provider: {res_json['error']}"
         else:
-            if not is_admin:
-                cursor.execute("UPDATE users SET balance = balance + ? WHERE username = ?", (total_charge, username))
-                conn.commit()
             message = "Error: Unexpected response format"
     except Exception as e:
-        if not is_admin:
-            cursor.execute("UPDATE users SET balance = balance + ? WHERE username = ?", (total_charge, username))
-            conn.commit()
         message = f"Connection Error: {e}"
         
-    cursor.execute("INSERT INTO orders (username, service_name, link, quantity, charge, api_order_id, status) VALUES (?, ?, ?, ?, ?, ?, ?)",
-                   (username, service_name, target_link, quantity, total_charge, api_order_id, message))
+    conn = sqlite3.connect('database.db')
+    cursor = conn.cursor()
+    cursor.execute("INSERT INTO orders (service_name, link, quantity, charge, api_order_id, status) VALUES (?, ?, ?, ?, ?, ?)",
+                   (service_name, target_link, quantity, total_charge, api_order_id, message))
     conn.commit()
     conn.close()
     
-    return render_template_string(TEMPLATE, page='dashboard', username=username, is_admin=is_admin, balance=get_user_balance(username), services=services, message=message)
+    return render_template_string(TEMPLATE, logged_in=True, services=services, message=message)
 
 @app.route("/logout", methods=["POST"])
 def logout():
-    session.pop('username', None)
-    return redirect(url_for('login'))
+    session.pop('logged_in', None)
+    return redirect(url_for('home'))
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)
