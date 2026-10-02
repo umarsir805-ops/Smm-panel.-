@@ -1,14 +1,13 @@
-from flask import Flask, redirect, render_template_string, request, session, url_for
+from flask import Flask, render_template_string, request, redirect, url_for, session
 import sqlite3
 import requests
 
 app = Flask(__name__)
-app.secret_key = "umar_secret_key_super_secure"
+app.secret_key = "umar_heavy_backend_secret"
 
+# Yahan apni API details dali hain
 API_URL = "https://sparkyinfluence.in/api/v2"
 API_KEY = "6016e188a1f7a6bb303f16eb539f9a96"
-
-# Yahan apna password set kar de jo tu panel kholne ke liye chahta hai
 PANEL_PASSWORD = "umar"
 
 def init_db():
@@ -17,10 +16,10 @@ def init_db():
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS orders (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
-            service_name TEXT NOT NULL,
-            link TEXT NOT NULL,
-            quantity INTEGER NOT NULL,
-            charge REAL NOT NULL,
+            service_name TEXT,
+            link TEXT,
+            quantity INTEGER,
+            charge REAL,
             api_order_id TEXT,
             status TEXT
         )
@@ -52,79 +51,104 @@ TEMPLATE = """
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Umar_Tools</title>
+    <title>AS illusion - SMM Panel</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         * { box-sizing: border-box; font-family: 'Poppins', sans-serif; }
-        body { background: #0f172a; color: #1e293b; display: flex; flex-direction: column; justify-content: center; align-items: center; min-height: 100vh; margin: 0; overflow-x: hidden; }
+        body { background: #0f172a; color: #f8fafc; margin: 0; padding: 0; min-height: 100vh; display: flex; flex-direction: column; }
         
-        .main-title {
+        header {
+            background: #1e293b;
+            border-bottom: 1px solid #334155;
+            padding: 15px 30px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+        }
+        .logo {
             font-family: 'Orbitron', sans-serif;
             font-size: 22px;
             font-weight: 800;
-            color: #ffffff;
             text-align: center;
-            margin-bottom: 15px;
             letter-spacing: 1px;
-            text-shadow: 0 0 10px rgba(255,255,255,0.3);
         }
-        .main-title span {
-            background: linear-gradient(45deg, #ff416c, #ff4b2b, #00ff87, #60efff);
-            background-size: 300% 300%;
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            animation: gradientShift 5s ease infinite;
-        }
-        @keyframes gradientShift {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
-        }
-
-        .dashboard { width: 100%; max-width: 440px; padding: 15px; }
-        .card { 
-            background: #ffffff; 
-            border-radius: 16px; 
-            padding: 24px; 
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-            position: relative;
-            z-index: 1;
-        }
-        .card-glow-wrap {
-            position: relative;
-            border-radius: 18px;
-            padding: 3px;
-            background: linear-gradient(60deg, #ff0000, #ff7300, #fffb00, #48ff00, #00ffd5, #002bff, #7a00ff, #ff00c8, #ff0000);
-            background-size: 300% 300%;
-            animation: rgbBorderAnimation 4s linear infinite;
-        }
-        @keyframes rgbBorderAnimation {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
-        }
-
-        .brand { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-bottom: 1px solid #f1f5f9; padding-bottom: 12px; }
-        .brand h2 { margin: 0; font-size: 18px; font-weight: 700; }
-        .brand .red-text { color: #dc2626; }
-        .brand .green-text { color: #16a34a; }
-
-        label { font-size: 13px; font-weight: 600; color: #16a34a; display: block; margin-top: 12px; margin-bottom: 6px; }
-        input, select { width: 100%; padding: 12px; background: #f8fafc; border: 1px solid #cbd5e1; color: #0f172a; border-radius: 8px; font-size: 14px; transition: all 0.2s ease; }
-        input:focus, select:focus { border-color: #16a34a; outline: none; background: #fff; box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.1); }
+        .logo .red-text { color: #ef4444; }
+        .logo .white-text { color: #f8fafc; }
         
-        .desc-box { background: #f1f5f9; border: 1px solid #e2e8f0; padding: 12px; border-radius: 8px; margin-top: 12px; font-size: 12px; color: #334155; white-space: pre-line; display: none; line-height: 1.5; }
+        .logout-container {
+            position: absolute;
+            right: 30px;
+        }
         
-        button { width: 100%; padding: 14px; background: #16a34a; border: none; color: white; font-weight: 600; border-radius: 8px; cursor: pointer; margin-top: 15px; font-size: 15px; transition: background 0.2s; }
-        button:hover { background: #15803d; }
-
-        .logout-btn { background: transparent; border: 1px solid #cbd5e1; color: #64748b; margin-top: 8px; }
-        .logout-btn:hover { background: #f1f5f9; color: #0f172a; }
+        .main-container {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
         
-        .alert { padding: 10px; border-radius: 8px; font-size: 13px; margin-bottom: 15px; text-align: center; font-weight: 500; }
+        .full-card {
+            background: #1e293b;
+            width: 100%;
+            max-width: 600px;
+            border-radius: 16px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+            border: 1px solid #334155;
+        }
+        
+        input, select {
+            width: 100%;
+            padding: 14px;
+            margin-top: 8px;
+            margin-bottom: 15px;
+            background: #0f172a;
+            border: 1px solid #475569;
+            color: #fff;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+        input:focus, select:focus {
+            border-color: #22c55e;
+            outline: none;
+        }
+        
+        label {
+            font-size: 13px;
+            color: #22c55e;
+            font-weight: 600;
+            display: block;
+        }
+        
+        button {
+            width: 100%;
+            padding: 14px;
+            background: #22c55e;
+            border: none;
+            color: white;
+            font-weight: 600;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 15px;
+            transition: background 0.2s;
+        }
+        button:hover { background: #16a34a; }
+        
+        .alert {
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            text-align: center;
+            font-weight: 600;
+            font-size: 14px;
+        }
         .alert-success { background: #dcfce7; color: #166534; border: 1px solid #bbf7d0; }
         .alert-error { background: #fee2e2; color: #991b1b; border: 1px solid #fecaca; }
+        
+        h2 { margin-top: 0; color: #f8fafc; font-size: 22px; margin-bottom: 20px; }
     </style>
     <script>
         function updateServiceDetails() {
@@ -132,81 +156,70 @@ TEMPLATE = """
             if(!select) return;
             const qtyInput = document.getElementById('qtyInput');
             const chargeInput = document.getElementById('chargeInput');
-            const descBox = document.getElementById('descBox');
             
             const selectedOption = select.options[select.selectedIndex];
             const ratePer1000 = parseFloat(selectedOption.getAttribute('data-rate')) || 0;
-            const description = selectedOption.getAttribute('data-desc') || "";
             const quantity = parseInt(qtyInput.value) || 0;
             
             const totalCharge = (quantity / 1000) * ratePer1000;
             chargeInput.value = "₹ " + totalCharge.toFixed(2);
-            
-            if (description.trim() !== "") {
-                descBox.style.display = "block";
-                descBox.innerText = description;
-            } else {
-                descBox.style.display = "none";
-            }
         }
     </script>
 </head>
 <body>
-    <div class="dashboard">
-        <div class="main-title"><span>Umar_Tools</span></div>
-        <div class="card-glow-wrap">
-            <div class="card">
-                <div class="brand">
-                    <h2><span class="red-text">AS</span> <span class="green-text">illusion</span></h2>
-                    {% if logged_in %}
-                        <span style="font-size: 12px; color: #16a34a; font-weight: 600;">🔓 Unlocked</span>
-                    {% endif %}
-                </div>
+    <header>
+        <div class="logo"><span class="red-text">AS</span> <span class="white-text">illusion</span></div>
+        {% if session.get('logged') %}
+            <div class="logout-container">
+                <form method="POST" action="/logout" style="margin: 0;">
+                    <button type="submit" style="padding: 8px 16px; background: #ef4444; font-size: 13px; width: auto;">Lock Panel</button>
+                </form>
+            </div>
+        {% endif %}
+    </header>
 
+    <div class="main-container">
+        <div class="full-card">
+            {% if not session.get('logged') %}
+                <h2>Panel Access</h2>
                 {% if error %}
                     <div class="alert alert-error">{{ error }}</div>
                 {% endif %}
+                <form method="POST" action="/login">
+                    <label>Enter Password</label>
+                    <input type="password" name="password" placeholder="Enter panel password" required>
+                    <button type="submit">Unlock Panel</button>
+                </form>
+            {% else %}
+                <h2>New Order Dashboard</h2>
                 {% if message %}
                     <div class="alert alert-success">{{ message }}</div>
+                {% elif error %}
+                    <div class="alert alert-error">{{ error }}</div>
                 {% endif %}
-
-                {% if not logged_in %}
-                    <form method="POST" action="/login">
-                        <label>Enter Panel Password</label>
-                        <input type="password" name="password" placeholder="Enter password" required>
-                        <button type="submit">Access Panel</button>
-                    </form>
-                {% else %}
-                    <form method="POST" action="/order">
-                        <label>Service</label>
-                        <select name="service" id="serviceSelect" onchange="updateServiceDetails()" required>
-                            <option value="" disabled selected>Choose Instagram service...</option>
-                            {% for s in services %}
-                                <option value="{{ s.service }}" data-rate="{{ s.rate }}" data-desc="{{ s.description }}">
-                                    {{ s.name }} (₹{{ s.rate }}/1k)
-                                </option>
-                            {% endfor %}
-                        </select>
-                        
-                        <label>Description</label>
-                        <div class="desc-box" id="descBox"></div>
-                        
-                        <label>Link / Username</label>
-                        <input type="text" name="link" placeholder="Profile link or Username" required>
-                        
-                        <label>Quantity</label>
-                        <input type="number" name="quantity" id="qtyInput" oninput="updateServiceDetails()" placeholder="Quantity" required>
-                        
-                        <label>Total Charge</label>
-                        <input type="text" id="chargeInput" value="₹ 0.00" disabled style="background: #e2e8f0; font-weight: bold; color: #16a34a;">
-                        
-                        <button type="submit">Submit Order</button>
-                    </form>
-                    <form method="POST" action="/logout">
-                        <button type="submit" class="logout-btn">Lock Panel</button>
-                    </form>
-                {% endif %}
-            </div>
+                <form method="POST" action="/order">
+                    <label>Select Service</label>
+                    <select name="service" id="serviceSelect" onchange="updateServiceDetails()" required>
+                        <option value="" disabled selected>Choose Instagram service...</option>
+                        {% for s in services %}
+                            <option value="{{ s.service }}" data-rate="{{ s.rate }}">
+                                {{ s.name }} (₹{{ s.rate }}/1k)
+                            </option>
+                        {% endfor %}
+                    </select>
+                    
+                    <label>Target Link / Username</label>
+                    <input type="text" name="link" placeholder="Paste profile or post link here" required>
+                    
+                    <label>Quantity</label>
+                    <input type="number" name="quantity" id="qtyInput" oninput="updateServiceDetails()" placeholder="Enter quantity" required>
+                    
+                    <label>Total Charge</label>
+                    <input type="text" id="chargeInput" value="₹ 0.00" disabled style="background: #0f172a; font-weight: bold; color: #22c55e;">
+                    
+                    <button type="submit">Submit Order</button>
+                </form>
+            {% endif %}
         </div>
     </div>
 </body>
@@ -214,26 +227,23 @@ TEMPLATE = """
 """
 
 @app.route("/")
-def home():
-    logged_in = session.get('logged_in', False)
+def index():
+    logged_in = session.get('logged', False)
     services = fetch_services() if logged_in else []
     return render_template_string(TEMPLATE, logged_in=logged_in, services=services)
 
 @app.route("/login", methods=["POST"])
 def login():
-    error = None
     password = request.form.get("password", "").strip()
     if password == PANEL_PASSWORD:
-        session['logged_in'] = True
-    else:
-        error = "Incorrect Password!"
-        return render_template_string(TEMPLATE, logged_in=False, error=error)
-    return redirect(url_for('home'))
+        session['logged'] = True
+        return redirect(url_for('index'))
+    return render_template_string(TEMPLATE, logged_in=False, error="Incorrect Password!")
 
 @app.route("/order", methods=["POST"])
 def order():
-    if not session.get('logged_in', False):
-        return redirect(url_for('home'))
+    if not session.get('logged', False):
+        return redirect(url_for('index'))
     
     service_id = request.form.get("service")
     target_link = request.form.get("link", "").strip()
@@ -242,7 +252,7 @@ def order():
     try:
         quantity = int(quantity_str)
     except ValueError:
-        return redirect(url_for('home'))
+        return redirect(url_for('index'))
         
     services = fetch_services()
     rate = 0
@@ -264,33 +274,35 @@ def order():
     }
     
     message = ""
+    error = None
     api_order_id = None
+    
     try:
         response = requests.post(API_URL, data=payload, timeout=15)
         res_json = response.json()
         if isinstance(res_json, dict) and 'order' in res_json:
             api_order_id = str(res_json['order'])
-            message = f"Success! Order ID: {api_order_id}"
+            message = f"Success! Order placed. ID: {api_order_id}"
         elif isinstance(res_json, dict) and 'error' in res_json:
-            message = f"Error from Provider: {res_json['error']}"
+            error = f"Provider Error: {res_json['error']}"
         else:
-            message = "Error: Unexpected response format"
+            error = "Unexpected response from provider."
     except Exception as e:
-        message = f"Connection Error: {e}"
+        error = f"Connection Error: {e}"
         
     conn = sqlite3.connect('database.db')
     cursor = conn.cursor()
     cursor.execute("INSERT INTO orders (service_name, link, quantity, charge, api_order_id, status) VALUES (?, ?, ?, ?, ?, ?)",
-                   (service_name, target_link, quantity, total_charge, api_order_id, message))
+                   (service_name, target_link, quantity, total_charge, api_order_id, message if not error else error))
     conn.commit()
     conn.close()
     
-    return render_template_string(TEMPLATE, logged_in=True, services=services, message=message)
+    return render_template_string(TEMPLATE, logged_in=True, services=services, message=message, error=error)
 
 @app.route("/logout", methods=["POST"])
 def logout():
-    session.pop('logged_in', None)
-    return redirect(url_for('home'))
+    session.pop('logged', None)
+    return redirect(url_for('index'))
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)
